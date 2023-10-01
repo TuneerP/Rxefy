@@ -1,0 +1,62 @@
+Python
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+def crawl(primary_category, secondary_category, geography, date_range):
+  """Crawls websites to find URL(s) based on the input parameters."""
+
+  # Create a list to store the URLs
+  urls = []
+
+  # Get the list of websites to crawl
+  websites = []
+  for country in geography.split(','):
+    for category in primary_category.split(','):
+      for sub_category in secondary_category.split(','):
+        websites.append(f'https://www.{country}.{category}.com/search/?q={sub_category}&date={date_range}')
+
+  # Crawl each website and extract the URLs
+  for website in websites:
+    page = requests.get(website)
+    soup = BeautifulSoup(page.content, 'html.parser')
+
+    # Extract the URLs from the search results
+    for link in soup.findAll('a', href=True):
+      url = link['href']
+
+      # Add the URL to the list
+      urls.append(url)
+
+  return urls
+
+def write_csv(urls, output_file):
+  """Writes the URLs to a CSV file."""
+
+  with open(output_file, 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow(['URL'])
+
+    for url in urls:
+      writer.writerow([url])
+
+def main():
+  """Main function."""
+
+  # Get the input parameters
+  input_json = {
+    'primary_category': 'Medical Journal',
+    'secondary_category': 'Orthopedic',
+    'geography': 'India',
+    'date_range': '2022-23'
+  }
+
+  # Crawl the websites and extract the URLs
+  urls = crawl(**input_json)
+
+  # Write the URLs to a CSV file
+  output_file = 'urls.csv'
+  write_csv(urls, output_file)
+
+if __name__ == '__main__':
+  main()
