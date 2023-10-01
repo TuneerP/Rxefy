@@ -1,0 +1,85 @@
+import requests
+from bs4 import BeautifulSoup
+import json
+
+def scrape_disease_names(url):
+  """Scrape disease names and details URLs from the given URL."""
+
+  # Get the HTML content of the page
+  page = requests.get(url)
+  soup = BeautifulSoup(page.content, 'html.parser')
+
+  # Extract the disease names and details URLs
+  disease_names = []
+  details_urls = []
+
+  for disease_name in soup.findAll('a', class_='disease-name'):
+    disease_names.append(disease_name.text)
+    details_urls.append(disease_name['href'])
+
+  return disease_names, details_urls
+
+def scrape_disease_details(url):
+  """Scrape disease details from the given URL."""
+
+  # Get the HTML content of the page
+  page = requests.get(url)
+  soup = BeautifulSoup(page.content, 'html.parser')
+
+  # Extract the disease overview, key facts, symptoms, causes, types, risk factors, diagnosis, prevention, specialist to visit, treatment, home-care, alternatives therapies, living with, FAQs, and references
+  disease_overview = soup.find('div', class_='disease-overview').text
+  key_facts = soup.find('div', class_='disease-key-facts').text
+  symptoms = soup.find('div', class_='disease-symptoms').text
+  causes = soup.find('div', class_='disease-causes').text
+  types = soup.find('div', class_='disease-types').text
+  risk_factors = soup.find('div', class_='disease-risk-factors').text
+  diagnosis = soup.find('div', class_='disease-diagnosis').text
+  prevention = soup.find('div', class_='disease-prevention').text
+  specialist_to_visit = soup.find('div', class_='disease-specialist').text
+  treatment = soup.find('div', class_='disease-treatment').text
+  home_care = soup.find('div', class_='disease-home-care').text
+  alternatives_therapies = soup.find('div', class_='disease-alternatives-therapies').text
+  living_with = soup.find('div', class_='disease-living-with').text
+  faqs = soup.find('div', class_='disease-faqs').text
+  references = soup.find('div', class_='disease-references').findAll('a')
+
+  # Convert the references to a list of links
+  references = [reference['href'] for reference in references]
+
+  # Create a JSON object to store the disease details
+  disease_details = {
+    'disease_name': url.split('/')[-1],
+    'overview': disease_overview,
+    'key_facts': key_facts,
+    'symptoms': symptoms,
+    'causes': causes,
+    'types': types,
+    'risk_factors': risk_factors,
+    'diagnosis': diagnosis,
+    'prevention': prevention,
+    'specialist_to_visit': specialist_to_visit,
+    'treatment': treatment,
+    'home_care': home_care,
+    'alternatives_therapies': alternatives_therapies,
+    'living_with': living_with,
+    'faqs': faqs,
+    'references': references
+  }
+
+  return disease_details
+
+def main():
+  """Main function."""
+
+  # Get the URL to the list of diseases
+  diseases_url = 'https://w...content-available-to-author-only...g.com/all-diseases'
+
+  # Scrape the disease names and details URLs
+  disease_names, details_urls = scrape_disease_names(diseases_url)
+
+  # Create a list to store the disease details
+  disease_details = []
+
+  # Scrape the disease details for each disease
+  for detail_url in details_urls:
+    disease_details.append(scrape_disease_details(detail_url))
