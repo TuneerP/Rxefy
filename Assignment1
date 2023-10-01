@@ -1,0 +1,132 @@
+TypeScript
+// server.js
+ 
+const express = require('express');
+const db = require('./db');
+ 
+const app = express();
+ 
+// Create an endpoint for creating a new user account
+app.post('/api/users', async (req, res) => {
+  const { name, username, password } = req.body;
+ 
+  const user = await db.users.create({
+    name,
+    username,
+    password,
+  });
+ 
+  res.json(user);
+});
+ 
+// Create an endpoint for retrieving all user accounts
+app.get('/api/users', async (req, res) => {
+  const users = await db.users.find();
+ 
+  res.json(users);
+});
+ 
+// Create an endpoint for creating a new task list
+app.post('/api/task-lists', async (req, res) => {
+  const { user, title } = req.body;
+ 
+  const taskList = await db.taskLists.create({
+    user,
+    title,
+  });
+ 
+  res.json(taskList);
+});
+ 
+// Create an endpoint for retrieving all task lists for a given user account
+app.get('/api/users/:userId/task-lists', async (req, res) => {
+  const userId = req.params.userId;
+ 
+  const taskLists = await db.taskLists.find({ user });
+ 
+  res.json(taskLists);
+});
+ 
+// Create an endpoint for creating a new task
+app.post('/api/tasks', async (req, res) => {
+  const { taskList, title, description, deadline } = req.body;
+ 
+  const task = await db.tasks.create({
+    taskList,
+    title,
+    description,
+    deadline,
+  });
+ 
+  res.json(task);
+});
+ 
+// Create an endpoint for retrieving all tasks for a given task list
+app.get('/api/task-lists/:taskListId/tasks', async (req, res) => {
+  const taskListId = req.params.taskListId;
+ 
+  const tasks = await db.tasks.find({ taskList });
+ 
+  res.json(tasks);
+});
+ 
+// Create an endpoint for sharing a task with another user account
+app.post('/api/tasks/:taskId/share', async (req, res) => {
+  const taskId = req.params.taskId;
+  const { sharedWith } = req.body;
+ 
+  await db.tasks.update({ id: taskId }, { sharedWith });
+ 
+  res.json({ success: true });
+});
+ 
+// Start the server
+app.listen(3000, () => {
+  console.log('Server listening on port 3000');
+});
+Use code with caution. Learn more
+Database:
+ 
+SQL
+CREATE TABLE users (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  username VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  PRIMARY KEY (id)
+);
+ 
+CREATE TABLE task_lists (
+  id INT NOT NULL AUTO_INCREMENT,
+  user INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (user) REFERENCES users (id)
+);
+ 
+CREATE TABLE tasks (
+  id INT NOT NULL AUTO_INCREMENT,
+  task_list INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  deadline DATETIME NOT NULL,
+  shared_with VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (task_list) REFERENCES task_lists (id)
+);
+Use code with caution. Learn more
+Redux Store and Reducers:
+ 
+TypeScript
+// store.ts
+ 
+import { createStore, applyMiddleware } from 'redux';
+import createSagaMiddleware from 'redux-saga';
+import { composeWithDevTools } from '@redux-devtools/extension';
+ 
+import taskListReducer from './task-list-reducer';
+import taskReducer from './task-reducer';
+ 
+const sagaMiddleware = createSagaMiddleware();
+ 
+const store = createStore(
